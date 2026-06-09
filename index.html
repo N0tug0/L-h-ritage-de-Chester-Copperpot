@@ -452,7 +452,7 @@ function doTransition() {
 
 function startBackgroundMusic() {
   bgMusic = new THREE.Audio(listener);
-  aLoader.load('./audio/Jazz_Noir.mp3', function(buf) {
+  aLoader.load('./Audio/Jazz_Noir.mp3', function(buf) {
     bgMusic.setBuffer(buf);
     bgMusic.setLoop(true);
     bgMusic.setVolume(0.25);
@@ -461,7 +461,7 @@ function startBackgroundMusic() {
 
   // NOUVEAU : On précharge la musique Synthwave du Grenier en sourdine
   bgMusic2 = new THREE.Audio(listener);
-  aLoader.load('./audio/Synthwave.mp3', function(buf) {
+  aLoader.load('./Audio/Synthwave.mp3', function(buf) {
     bgMusic2.setBuffer(buf);
     bgMusic2.setLoop(true);
     bgMusic2.setVolume(0);
