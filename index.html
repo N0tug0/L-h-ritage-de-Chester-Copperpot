@@ -1520,6 +1520,100 @@ document.getElementById('retry-btn').addEventListener('click', function() {
   startOverlay.classList.remove('hidden');
 });
 
+  // ================================================================
+// 11. CONTROLES UNIFIÉS (SOURIS + TACTILE MOBILE)
+// ================================================================
+var dragging = false;
+var prevX = 0;
+var prevY = 0;
+var startDist = 0; // Stocke la distance initiale entre deux doigts pour le zoom mobile
+var isPinching = false;
+
+// Gestion du clic et du tap unique (Raycaster pour les objets)
+renderer.domElement.addEventListener('pointerdown', function(e) {
+  // On met à jour la position du pointeur pour le Raycaster immédiatement au point de contact
+  ptr.x = (e.clientX / window.innerWidth) * 2 - 1;
+  ptr.y = -(e.clientY / window.innerHeight) * 2 + 1;
+});
+
+renderer.domElement.addEventListener('click', onClick);
+
+// Déclenchement du mouvement (Clic ou premier touché)
+window.addEventListener('pointerdown', function(e) {
+  // Gestion du multi-touch (Zoom à deux doigts sur mobile)
+  if (e.pointerType === 'touch') {
+    // Si l'événement est un touché, on récupère tous les points de contact actifs
+    var touches = e.targetTouches || [];
+    if (touches.length === 2) {
+      isPinching = true;
+      dragging = false;
+      // Calcul de la distance de départ entre les deux doigts (Théorème de Pythagore)
+      var dx = touches[0].clientX - touches[1].clientX;
+      var dy = touches[0].clientY - touches[1].clientY;
+      startDist = Math.sqrt(dx * dx + dy * dy);
+      return;
+    }
+  }
+
+  // Comportement standard (Un seul doigt ou clic gauche souris)
+  if (e.button === 0 || e.pointerType === 'touch') {
+    dragging = true;
+    prevX = e.clientX;
+    prevY = e.clientY;
+  }
+});
+
+// Fin du mouvement
+window.addEventListener('pointerup', function(e) {
+  dragging = false;
+  isPinching = false;
+});
+window.addEventListener('pointercancel', function() {
+  dragging = false;
+  isPinching = false;
+});
+
+// Pendant le déplacement
+window.addEventListener('pointermove', function(e) {
+  // 1. Met à jour le survol des objets (Uniquement à la souris pour éviter les bugs mobiles)
+  if (e.pointerType === 'mouse') {
+    onMove(e);
+  }
+
+  // 2. Gestion du Zoom Pinch (Deux doigts sur mobile)
+  if (isPinching && e.pointerType === 'touch') {
+    var touches = e.targetTouches || [];
+    if (touches.length === 2) {
+      var dx = touches[0].clientX - touches[1].clientX;
+      var dy = touches[0].clientY - touches[1].clientY;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      
+      // Calcule le facteur de zoom basé sur l'écartement des doigts
+      var factor = (startDist - dist) * 0.005;
+      zscale = Math.max(0.4, Math.min(2.5, zscale + factor));
+      startDist = dist; // Met à jour la distance de référence
+      updateCam();
+    }
+    return;
+  }
+
+  // 3. Gestion de la rotation de la caméra (Un doigt ou glissé de souris)
+  if (!dragging) return;
+  
+  var deltaX = e.clientX - prevX;
+  orbit -= deltaX * 0.007; // Fait pivoter la scène
+  
+  prevX = e.clientX;
+  prevY = e.clientY;
+  updateCam();
+});
+
+// Zoom à la molette (Garde la compatibilité PC complète)
+document.addEventListener('wheel', function(e) {
+  zscale = Math.max(0.4, Math.min(2.5, zscale + e.deltaY * 0.001));
+  updateCam();
+}, { passive: true });
+
 </script>
 </body>
 </html>
